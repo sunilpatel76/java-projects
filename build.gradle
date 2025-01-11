@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'org.springframework.boot' version '3.4.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'spatel.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.11.4'
+
+    implementation 'io.cucumber:cucumber-java:7.20.1'
+    implementation 'io.cucumber:cucumber-junit:7.20.1'
+    implementation 'io.cucumber:cucumber-spring:7.20.1'
+
+    implementation 'org.seleniumhq.selenium:selenium-java:4.27.0'
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+
+}
+
+def tags = (findProperty('tags') != null) ? '@default' : findProperty('tags')
+
+
+tasks.register('runCucumberTests', JavaExec) {
+    group = "Verification"
+    mainClass = "io.cucumber.core.cli.Main"
+    classpath = sourceSets.test.runtimeClasspath
+
+    args = ['--plugin', 'pretty',
+            '--plugin', 'html:target/cucumber.html',
+            '--plugin', 'junit:target/junit.xml',
+            '--plugin', 'json:target/cucumber.json',
+            '--glue', 'classpath:spatel.example.swaglabs', 'src/test/resources',
+            '--tags', '@default'
+
+//            '--threads', threads
+    ]
+    systemProperties = ['spring.profiles.active': System.getProperty("spring.profiles.active")]
+}
